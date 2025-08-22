@@ -31,6 +31,10 @@ POST_TYPE_CHOICES = [
 ]
 
 class Post(models.Model):
+    NEWS = 'NW'
+    ARTICLE = 'AR'
+    POST_TYPE_CHOICES = [(NEWS, 'Новость'),(ARTICLE, 'Статья')]
+
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="posts")
     created_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField("Category", through='PostCategory')
