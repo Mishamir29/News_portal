@@ -1,0 +1,9 @@
+{% extends 'flatpages/default.html' %}
+
+<h1>Редактировать "{{ post.title }}"</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Сохранить</button>
+</form>
+<a href="/">Назад</a>
