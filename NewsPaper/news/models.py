@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
+from django.urls import reverse_lazy
 
 
 class Author(models.Model):
@@ -39,7 +40,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField("Category", through='PostCategory')
     title = models.CharField(max_length=255)
-    post_type = models.CharField(max_length=10, choices=POST_TYPE_CHOICES)
+    post_type = models.CharField(max_length=2, choices=POST_TYPE_CHOICES)
     content = models.TextField()
     rating = models.IntegerField(default= 0)
 
@@ -56,6 +57,9 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse_lazy("news_detail", kwargs= {"pk", self.pk})
 
 
 class Category(models.Model):
