@@ -1,22 +1,10 @@
 {% extends 'flatpages/default.html' %}
 
-
 {% block content %}
 <h1>Поиск</h1>
 <hr>
-<form action="" method="get">
-    {% csrf_token %}
+<form method="get">
     {{ filterset.form.as_p }}
-    <label for="start">Дата:</label>
-        <input
-            type="date"
-            id="start"
-            name="trip-start"
-            value="2025-07-22"
-            min="2025-01-01"
-            max="2025-12-31" />
-    <br>
-    <br>
     <button type="submit">Поиск</button>
 </form>
 
@@ -24,13 +12,11 @@
 
 {% for post in filterset.qs %}
     <div>
-        <h3><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h3>
+        <h3><a href="{% url 'news_detail' post.pk %}">{{ post.title }}</a></h3>
         <p>{{ post.created_at|date:"d.m.Y H:i" }} | Автор: {{ post.author }}</p>
     </div>
-
-    {% empty %}
+{% empty %}
     <p>Новости не найдены.</p>
 {% endfor %}
 
-
-{% endblock content%}
+{% endblock content %}
