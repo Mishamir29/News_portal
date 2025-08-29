@@ -1,20 +1,53 @@
 from datetime import datetime
 
+from django.core.exceptions import PermissionDenied
+
+from .filters import PostsFilter
+from .forms import PostForm
+from .models import Post
+
+from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import (
     ListView, DetailView, DeleteView, CreateView, UpdateView
 )
-from .filters import PostsFilter
-from .forms import PostForm
-from .models import Post
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic import TemplateView
+from django.contrib.auth.models import Group
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
+def protected_view(request):
+    return render(request, "protected.html")
 
-class PostCreate(CreateView):
+
+@login_required
+def upgrade_me(request):
+    user = request.user
+    if request.method == 'POST':
+        try:
+            # Получаем группу authors
+            authors_group = Group.objects.get(name='authors')
+            # Добавляем пользователя в эту группу
+            user.groups.add(authors_group)
+            # Правильно используем messages
+            messages.success(request, "Поздравляем! Вы теперь автор.")
+        except Group.DoesNotExist:
+             messages.error(request, "Ошибка: группа авторов не найдена.")
+        return redirect('/')
+
+    # Проверим, не является ли пользователь уже автором
+    is_author = user.groups.filter(name='authors').exists()
+    return render(request, 'upgrade_me.html', {'is_author': is_author})
+
+
+class PostCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
     template_name = 'post_create.html'
+    permission_required = 'news.add_post'
     success_url = reverse_lazy('post_list')
 
     def form_valid(self, form):
@@ -33,11 +66,31 @@ class PostCreate(CreateView):
         return context
 
 
-class PostUpdate(UpdateView):
+class PostUpdate(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Post
+    form_class = PostForm
     fields = ['title', 'content']
     template_name = 'post_edit.html'
     success_url = reverse_lazy('post_list')
+    permission_required = 'news.change_post'
+
+    def get_queryset(self, queryset= None):
+        obj = super().get_object(queryset)
+        # Проверяем, является ли текущий пользователь автором объекта
+        if not obj.author.user == self.request.user:
+            raise PermissionDenied
+        return obj
+
+
+class NewsDetail(DetailView):
+    model = Post
+    template_name = 'post.html'
+    context_object_name = 'post'
+
+def news_search(request):
+    queryset = Post.objects.all()
+    filterset= PostsFilter(request.GET, queryset=queryset)
+    return render(request, 'news_search.html', {'filterset': filterset,})
 
 
 class NewsList(ListView):
@@ -60,27 +113,25 @@ class NewsList(ListView):
         return context
 
 
-class NewsDetail(DetailView):
-    model = Post
-    template_name = 'post.html'
-    context_object_name = 'post'
-
-
-def news_search(request):
-    queryset = Post.objects.all()
-    filterset= PostsFilter(request.GET, queryset=queryset)
-    return render(request, 'news_search.html', {'filterset': filterset,})
-
-
 class PostDeleteView(DeleteView):
     model = Post
-    success_url = reverse_lazy('post_list')
     template_name = 'post_confirm_delete.html'
+    success_url = reverse_lazy('post_list')
+    permission_required = 'news.delete_post'
+
+    def get_queryset(self, queryset=None):
+        obj = super().get_object(queryset)
+        # Проверяем, является ли текущий пользователь автором объекта
+        if not obj.author.user == self.request.user:
+            raise PermissionDenied
+        return obj
 
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        return qs.filter(author__user=self.request.user)
+class IndexView(LoginRequiredMixin, TemplateView):
+    template_name = 'protected.html'
 
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_not_author']= not self.request.user.groups.filter(name = 'author').exists()
+        return context
 # Create your views here.
