@@ -1,0 +1,12 @@
+{% extends 'flatpages/default.html' %}
+
+{% block content %}
+<h2>Завершение регистрации</h2>
+<p>Вы вошли через {{ account.get_provider.name }}. Пожалуйста, подтвердите регистрацию.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Зарегистрироваться</button>
+</form>
+{% endblock %}

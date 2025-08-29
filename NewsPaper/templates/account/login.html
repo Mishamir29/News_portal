@@ -1,0 +1,23 @@
+{% extends 'flatpages/default.html' %}
+{% load account socialaccount %}
+
+{% block content %}
+<h2>Вход в систему</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+    {% endif %}
+    <button type="submit">Войти</button>
+</form>
+
+<p><a href="{% url 'account_reset_password' %}">Забыли пароль?</a></p>
+
+<!-- Вход через Google -->
+<h3>Или войдите через:</h3>
+<a href="{% provider_login_url 'google' %}">Google</a>
+
+<p>Нет аккаунта? <a href="{% url 'account_signup' %}">Зарегистрируйтесь</a></p>
+{% endblock %}

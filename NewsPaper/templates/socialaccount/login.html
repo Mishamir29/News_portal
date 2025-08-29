@@ -1,0 +1,12 @@
+{% extends 'flatpages/default.html' %}
+
+{% block content %}
+<h2>Вход через {{ provider.name }}</h2>
+
+<p>Вы собираетесь войти через {{ provider.name }}.</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Продолжить</button>
+</form>
+{% endblock %}
