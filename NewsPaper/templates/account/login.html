@@ -1,23 +1,57 @@
-{% extends 'flatpages/default.html' %}
-{% load account socialaccount %}
-
+{% extends "account/base_entrance.html" %}
+{% load i18n %}
+{% load allauth account %}
+{% block head_title %}
+{% trans "Sign In" %}
+{% endblock head_title %}
 {% block content %}
-<h2>Вход в систему</h2>
-
-<form method="post">
+{% element h1 %}
+{% trans "Sign In" %}
+{% endelement %}
+{% if not SOCIALACCOUNT_ONLY %}
+{% setvar link %}
+<a href="{{ signup_url }}">
+    {% endsetvar %}
+    {% setvar end_link %}
+</a>
+{% endsetvar %}
+{% url 'account_login' as login_url %}
+<form method="post" action="{{ action_url }}" class="filter-form">
     {% csrf_token %}
-    {{ form.as_p }}
-    {% if redirect_field_value %}
-        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-    {% endif %}
-    <button type="submit">Войти</button>
+    {% element fields form=form unlabeled=True %}
+    {% endelement %}
+    {{ redirect_field }}
+    <div class="form-actions mt-3">
+        <button type="submit" class="btn btn-primary w-10">
+            {% trans "Войти" %}
+        </button>
+    </div>
 </form>
 
-<p><a href="{% url 'account_reset_password' %}">Забыли пароль?</a></p>
-
-<!-- Вход через Google -->
-<h3>Или войдите через:</h3>
-<a href="{% provider_login_url 'google' %}">Google</a>
-
-<p>Нет аккаунта? <a href="{% url 'account_signup' %}">Зарегистрируйтесь</a></p>
+{% endif %}
+{% if LOGIN_BY_CODE_ENABLED or PASSKEY_LOGIN_ENABLED %}
+{% element hr %}
+{% endelement %}
+{% element button_group vertical=True %}
+{% if PASSKEY_LOGIN_ENABLED %}
+{% element button type="submit" form="mfa_login" id="passkey_login" tags="prominent,login,outline,primary" %}
+{% trans "Sign in with a passkey" %}
+{% endelement %}
+{% endif %}
+{% if LOGIN_BY_CODE_ENABLED %}
+{% element button href=request_login_code_url tags="prominent,login,outline,primary" %}
+{% trans "Send me a sign-in code" %}
+{% endelement %}
+{% endif %}
+{% endelement %}
+{% endif %}
+{% if SOCIALACCOUNT_ENABLED %}
+{% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+{% endif %}
+{% endblock content %}
+{% block extra_body %}
+{{ block.super }}
+{% if PASSKEY_LOGIN_ENABLED %}
+{% include "mfa/webauthn/snippets/login_script.html" with button_id="passkey_login" %}
+{% endif %}
 {% endblock %}

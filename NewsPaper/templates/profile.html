@@ -1,0 +1,35 @@
+{% extends 'flatpages/default.html' %}
+
+{% block title %}
+Выход из системы
+{% endblock title %}
+
+
+{% block content %}
+{% csrf_token %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="shadow-lg border-0 rounded-4 p-4 text-center" style="width: 100%; max-width: 600px">
+        <h4 class="text-primary">Страничка авторизованного пользователя</h4>
+        <h3 class="text-danger">{{ user.username }}</h3>
+        <a href="{% url 'account_logout' %}" class="btn btn-outline-primary mt-2">Выйти</a>
+        {% if not is_subscribed  %}
+        <a href="{% url 'subscribe' %}" class="btn btn-outline-success mt-2">Подписаться на уведомления</a>
+        {% else %}
+        <a href="{% url 'unsubscribe' %}" class="btn btn-outline-danger mt-2"> Отписаться от уведомплений</a>
+        {% endif %}
+    </div>
+</div>
+{% if messages %}
+<div class="container mt-3 d-flex justify-content-center">
+    <div style="width: 100%; max-width: 600px">
+        {% for message in messages %}
+        {% if 'registration' in message.tags %}
+        <div class="allert allert-{{ message.tags }} mb-2">
+            {{ message }}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock content %}
