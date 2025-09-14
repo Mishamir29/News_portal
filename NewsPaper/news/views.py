@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied
 
 from .filters import PostsFilter
 from .forms import PostForm
-from .models import Post, Category
+from .models import Post, Category, PostCategory
 
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -16,9 +16,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.views.generic import TemplateView
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMultiAlternatives, send_mail
 from .utils import get_group
 
+# def notify_subscribers_appointment(sender, instance, create, **kwargs):
+#     mail_managers(
+#         subject=f'{instance.clie}'
+#     )
+#     pass
 
 @login_required
 def protected_view(request):
@@ -44,19 +48,6 @@ def upgrade_me(request):
     is_author = user.groups.filter(name='authors').exists()
     return render(request, 'upgrade_me.html', {'is_author': is_author})
 
-# @login_required
-# def subs(request,pk):
-#     user = request.user
-#     if request.method == "POST":
-#         category= get_object_or_404(Category, id=pk)
-#         if category.subscribers.filter(id=user.id).exists():
-#             category.subscribers.remove(user)
-#         else:
-#             category.subscribers.add(user)
-#
-#         return redirect('category_detail', pk=pk)
-#     else:
-#         return redirect('category_detail', pk=pk)
 
 @login_required
 def user_profile(request):
@@ -79,6 +70,20 @@ def unsubscribe(request):
         request.user.groups.remove(group_subscribers)
     return redirect(request.META.get('/'))
 
+@login_required
+def subscribe_category(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    category.subscribers.add(request.user)
+    messages.success(request, f'Вы успешно подписались на категорию "{category.name}"')
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required
+def unsubscribe_category(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    category.subscribers.remove(request.user)
+    messages.success(request, f'Вы успешно отписались от категории "{category.name}"')
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
 class CategoryDetail(LoginRequiredMixin,DetailView):
     model = Category
     template_name = 'categories.html'
@@ -99,48 +104,13 @@ class PostCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     permission_required = 'news.add_post'
     success_url = reverse_lazy('post_list')
 
-    # def form_valid(self, form):
-    #     post = form.save(commit=False)
-    #     news_path = "/post/news/create/"
-    #     if self.request.path == news_path:
-    #         post.post_type = "NW"
-    #     else:
-    #         post.post_type = "AR"
-    #     post.save()
-    #     categories = post.categories.all()
-    #     for category in categories:
-    #         subscribers = category.subscribers.all()
-    #         print(f"Subscribers for {category.name}: {subscribers}")
-    #         for subscriber in subscribers:
-    #             print(f"Sending email to {subscriber.email}")
-    #             msg= EmailMultiAlternatives(
-    #                 subject=post.title,
-    #                 body=f"Здравствуй, {subscriber.username}. Новая статья в твоём любимом разделе!",
-    #                 from_email='',
-    #                 to=[subscriber.email],
-    #             )
-    #             html_content= f"<p>{post.content[:50]}...</p>"
-    #             msg.attach_alternative(html_content,"text/html")
-    #             msg.send()
-    #     return super().form_valid(form)
-
     def form_valid(self, form):
-        response = super().form_valid(form)
-        group_subscribers = get_group('subscribers')
-        subscribers_users= group_subscribers.user_set.values_list('email', flat= True)
-        send_mail(
-            subject="Уведомление по подписке!",
-            message="Появилась новая публикация на новостном портале",
-            from_email="server@server.email",
-            recipient_list=[subscribers_users]
-        )
-        return response
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["post_type"] = 'новость' if self.request.path == "/post/news/create/" else 'статью'
         return context
-
 
 class PostUpdate(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Post

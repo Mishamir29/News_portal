@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from pyexpat.errors import messages
+from django.contrib import messages
 
 from .models import Post
 from allauth.account.forms import SignupForm
