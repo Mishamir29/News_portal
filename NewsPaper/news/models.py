@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.urls import reverse_lazy
 
 
 class Author(models.Model):
@@ -34,9 +33,9 @@ class Post(models.Model):
     ARTICLE = 'AR'
     POST_TYPE_CHOICES = [(NEWS, 'Новость'),(ARTICLE, 'Статья')]
 
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="posts")
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="posts_authors")
     created_at = models.DateTimeField(auto_now_add=True)
-    categories = models.ManyToManyField("Category")
+    categories = models.ManyToManyField("Category", through="PostCategory", related_name='posts')
     title = models.CharField(max_length=255)
     post_type = models.CharField(max_length=2, choices=POST_TYPE_CHOICES)
     content = models.TextField()
@@ -57,7 +56,8 @@ class Post(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse_lazy("news_detail", kwargs= {"pk", self.pk})
+        from django.urls import reverse
+        return reverse("news_detail", kwargs={"pk": self.pk})
 
 
 class Category(models.Model):
@@ -69,6 +69,7 @@ class Category(models.Model):
                                          )
 
     def __str__(self): return self.name
+
 
 class PostCategory(models.Model):
     post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="post_categories_through")
@@ -96,4 +97,3 @@ class Comment(models.Model):
     def __str__(self):
         return f"Комментарий от {self.user.username} к '{self.post.title}'"
 
-# Create your models here.

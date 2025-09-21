@@ -2,12 +2,17 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 
-from .models import Post
+from .models import Post, Category
 from allauth.account.forms import SignupForm
 from django.contrib.auth.models import Group, User
 
 
 class PostForm(forms.ModelForm):
+    categories = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        widget=forms.CheckboxSelectMultiple,  # или SelectMultiple
+        required=True
+    )
 
     class Meta:
         model = Post

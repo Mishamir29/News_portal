@@ -16,13 +16,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.views.generic import TemplateView
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.decorators import login_required
+from .signals import send_article_notification
 from .utils import get_group
 
-# def notify_subscribers_appointment(sender, instance, create, **kwargs):
-#     mail_managers(
-#         subject=f'{instance.clie}'
-#     )
-#     pass
 
 @login_required
 def protected_view(request):
@@ -51,24 +47,13 @@ def upgrade_me(request):
 
 @login_required
 def user_profile(request):
+    # Получаем все категории, на которые подписан пользователь
+    subscribed_categories = Category.objects.filter(subscribers=request.user)
     context = {
-        'is_subscribed': request.user.groups.filter(name='subscribers').exists(),
+        'subscribed_categories': subscribed_categories,
     }
-    return render(request,'profile.html', context)
+    return render(request, 'profile.html', context)
 
-@login_required
-def subscribe(request):
-    group_subscribers = get_group('subscribers')
-    if not request.user.groups.filter(name='subscribers').exists():
-        request.user.groups.add(group_subscribers)
-    return redirect(request.META.get('/'))
-
-@login_required
-def unsubscribe(request):
-    group_subscribers = get_group('subscribers')
-    if request.user.groups.filter(name='subscribers').exists():
-        request.user.groups.remove(group_subscribers)
-    return redirect(request.META.get('/'))
 
 @login_required
 def subscribe_category(request, pk):
@@ -84,17 +69,17 @@ def unsubscribe_category(request, pk):
     messages.success(request, f'Вы успешно отписались от категории "{category.name}"')
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
-class CategoryDetail(LoginRequiredMixin,DetailView):
+
+class CategoryDetail(LoginRequiredMixin, DetailView):
     model = Category
     template_name = 'categories.html'
-    context_object_name= 'category'
+    context_object_name = 'category'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['posts'] = Post.objects.filter(categories=self.object)
         context['is_subscribed'] = self.object.subscribers.filter(id=self.request.user.id).exists()
         return context
-
 
 
 class PostCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
@@ -111,6 +96,7 @@ class PostCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["post_type"] = 'новость' if self.request.path == "/post/news/create/" else 'статью'
         return context
+
 
 class PostUpdate(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Post

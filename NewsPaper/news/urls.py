@@ -30,8 +30,6 @@ urlpatterns = [
     path('category/<int:pk>/', CategoryDetail.as_view(), name= 'category_detail'),
 
     path('profile/', user_profile, name='user_profile'),
-    path('subscribe/', views.subscribe, name='subscribe'),
-    path('unsubscribe/', views.unsubscribe, name='unsubscribe'),
     path('category/<int:pk>/subscribe/', views.subscribe_category, name='subscribe_category'),
     path('category/<int:pk>/unsubscribe/', views.unsubscribe_category, name='unsubscribe_category'),
 
