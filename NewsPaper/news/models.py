@@ -35,7 +35,7 @@ class Post(models.Model):
 
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="posts_authors")
     created_at = models.DateTimeField(auto_now_add=True)
-    categories = models.ManyToManyField("Category", through="PostCategory", related_name='posts')
+    categories = models.ManyToManyField("Category",through='PostCategory', related_name='posts')
     title = models.CharField(max_length=255)
     post_type = models.CharField(max_length=2, choices=POST_TYPE_CHOICES)
     content = models.TextField()

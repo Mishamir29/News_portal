@@ -131,7 +131,7 @@ WSGI_APPLICATION = 'NewsPaper.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db_22.sqlite3',
     }
 }
 
@@ -198,3 +198,19 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ]
+
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Moscow'
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    "weak_newsletter":{
+        "task": "news.tasks.send_weekle_newsletter",
+        "schedule": crontab(day_of_week=1, hour=8, minute=0),
+    }
+}
