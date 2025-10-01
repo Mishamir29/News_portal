@@ -24,7 +24,7 @@ def send_welcome_email(sender, instance, created, **kwargs):
             fail_silently=False,
         )
 
-# Письмо при добавлении новой статьи
+
 @receiver(m2m_changed, sender=Post.categories.through)
 def send_article_notification(sender, instance, action, pk_set, **kwargs):
     if action == "post_add":
@@ -69,35 +69,4 @@ def send_article_notification(sender, instance, action, pk_set, **kwargs):
             except Category.DoesNotExist:
                 print(f"Категория с ID {category_id} не найдена")
 
-
-# @receiver(post_save, sender=Post)
-# def send_message_to_user(sender, instance, created, **kwargs):
-#     if created:
-#         categories = instance.categories.all()
-#         for category in categories:
-#             subscribers = category.subscribers.all()
-#             for subscriber in subscribers:
-#                 try:
-#                     email = subscriber.email
-#                     username = subscriber.username
-#
-#                     subject = instance.title
-#                     html_content = f"""
-#                     <h2>Здравствуй, {username}.</h2>
-#                     <h3>Новая статья в твоём любимом разделе!</h3>
-#                     <h4>{instance.title}</h4>
-#                     <p>{instance.content[:50]}...</p>
-#                     """
-#
-#                     send_mail(
-#                         subject=subject,
-#                         message="",
-#                         from_email=None,
-#                         recipient_list=[email],
-#                         html_message=html_content
-#                     )
-#                 except Exception as e:
-#                     import traceback
-#                     traceback.print_exc()
-#                     print("Конец")
 

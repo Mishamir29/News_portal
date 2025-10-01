@@ -34,9 +34,9 @@ class Post(models.Model):
     ARTICLE = 'AR'
     POST_TYPE_CHOICES = [(NEWS, 'Новость'),(ARTICLE, 'Статья')]
 
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="posts")
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    categories = models.ManyToManyField("Category")
+    categories = models.ManyToManyField("Category", through= 'PostCategory',related_name='posts')
     title = models.CharField(max_length=255)
     post_type = models.CharField(max_length=2, choices=POST_TYPE_CHOICES)
     content = models.TextField()
